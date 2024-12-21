@@ -292,7 +292,7 @@ int task4_queens_battle(int size,int row ,int col,int Queens[size][size], char b
 int isPlaceSafe(char board[MAX_DIMENSION][MAX_DIMENSION], char word [MAX_LENGTH],int boardSize ,struct Slots slots ,
     int place ,int row , int col) {
 
-    if(place == slots.length)
+    if( (place == slots.length) && (strlen(word) == slots.length) )
         return 1;
 
     if(col >= boardSize || row >= boardSize || (board[row][col] != ' ' && board[row][col] != word[place]))
@@ -304,13 +304,34 @@ int isPlaceSafe(char board[MAX_DIMENSION][MAX_DIMENSION], char word [MAX_LENGTH]
         return isPlaceSafe(board ,word,boardSize ,slots ,place + 1 ,row + 1 ,col) ;
 
 }
+void placeWord(char board[MAX_DIMENSION][MAX_DIMENSION], char word [MAX_LENGTH] ,struct Slots slots ,
+    int place ,int row , int col) {
 
-int task5_crossword_generator(int slotCounter ,int numSlots , int boardSize , char board[MAX_DIMENSION][MAX_DIMENSION]
+    if(place == slots.length)
+        return;
+    if(slots.direction == 'H') {
+        board[row][col] = word[place];
+        placeWord(board,word ,slots ,place + 1 ,row ,col + 1);
+    }else if(slots.direction == 'V') {
+        board[row][col] = word[place];
+        placeWord(board ,word ,slots ,place + 1 ,row + 1 ,col );
+    }
+
+}
+
+int task5_crossword_generator(int currentSlot ,int numSlots ,int currentWord, int boardSize , char board[MAX_DIMENSION][MAX_DIMENSION]
     ,struct Slots slots, char dictionary[MAX_SLOTS][MAX_LENGTH] ,int usedWord[MAX_SLOTS]) {
 
-    if(slotCounter == numSlots)
+    if(currentSlot == numSlots)
         return 1;
-    struct Slots slots = slots[slotCounter];
+    if(currentWord == numSlots)
+        return 0;
+    struct Slots slots = slots[currentSlot];
+    if(isPlaceSafe(board ,dictionary[currentWord],boardSize,slots,MIN_NUMBER,slots.row,slots.col) &&
+        (usedWord[currentWord] == 0) ) {
+        placeWord(board,dictionary[currentWord],slots,0 ,slots.row ,slots.col);
+        usedWord[currentWord] = 1;
+        if (task5_crossword_generator(currentSlot + 1,numSlots,currentWord + 1,boardSize,board,slots,dictionary,usedWord))
 
 }
 
