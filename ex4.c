@@ -8,6 +8,16 @@ Assignment:EX4
 #include <string.h>
 #define MIN_NUMBER 0
 #define MAX_SIZE 20
+#define MAX_DIMENSION 30
+#define MAX_SLOTS 100
+#define MAX_LENGTH 15
+struct Slots {
+    int row ;
+    int col ;
+    int length;
+    char direction;
+};
+
 int task1_robot_paths(int x, int y);
 float task2_human_pyramid(float arr[5][5], int row , int col);
 int task3_parenthesis_validator(char expected);
@@ -19,6 +29,7 @@ void initializeRegion(int region[255], int index) {
         initializeRegion(region, index + 1);
     }
 }
+
 
 
 int main()
@@ -117,9 +128,41 @@ int main()
                     printf("Queens battle failed.\n");
                 break;
             }
-            case 5:
-                task5_crossword_generator();
+            case 5: {
+                int boardSize , wordsCount ,numSlots ;
+                struct Slots slots[MAX_SLOTS];
+                char board[MAX_DIMENSION][MAX_DIMENSION] = {{' '}};
+                char dictionary[MAX_SLOTS][MAX_LENGTH + 1];
+                int isWordPlaced[MAX_SLOTS] = {0};
+                printf("Please enter the dimensions of the crossword grid:\n");
+                scanf("%d\n",&boardSize);
+
+                printf("Please enter the number of slots in the crossword:\n");
+                scanf("%d\n",&numSlots);
+
+                printf("Please enter the details for each slot (Row, Column, Length, Direction):\n");
+                for (int i = 0; i < numSlots; i++) {
+                    scanf("%d %d %d %c",&slots[i].row ,&slots[i].col ,&slots[i].length ,&slots[i].direction);
+                }
+                printf("\nPlease enter the number of words in the dictionary:\n");
+                do {
+                    if(scanf("%d",&wordsCount)>= numSlots)
+                        break ;
+                    printf("The dictionary must contain at least %d words."
+                        "Please enter a valid dictionary size:\n",numSlots);
+                }while(scanf("%d",&wordsCount)>= numSlots);
+                printf("Please enter the words for the dictionary:\n");
+                for (int i = 0; i < wordsCount; i++) {
+                    scanf("%s",dictionary[i]);
+                }
+
+                if(task5_crossword_generator( 0 , numSlots, boardSize ,board, slots, dictionary ,isWordPlaced)) {
+
+                }else
+                    printf("This crossword cannot be solved.\n");
+
                 break;
+            }
             default:
                 printf("Please choose a task number from the list.\n");
                 break;
@@ -233,8 +276,8 @@ int task4_queens_battle(int size,int row ,int col,int Queens[size][size], char b
         return 0;
     }
     if(isSafeSquare(size , row , col , Queens,board,region ,1) &&
-        isRowSafe(size,row,col = 0,Queens) &&
-        isColSafe(size,row= 0,col,Queens) &&
+        isRowSafe(size,row, 0,Queens) &&
+        isColSafe(size, 0,col,Queens) &&
         region[(unsigned char)board[row][col]] == 0 ) {
         Queens[row][col] = 1;
         region[(unsigned char)board[row][col]] = 1;
@@ -246,8 +289,28 @@ int task4_queens_battle(int size,int row ,int col,int Queens[size][size], char b
     }
     return task4_queens_battle(size ,row +1 , col , Queens ,board , region);
 }
+int isPlaceSafe(char board[MAX_DIMENSION][MAX_DIMENSION], char word [MAX_LENGTH],int boardSize ,struct Slots slots ,
+    int place ,int row , int col) {
 
-void task5_crossword_generator()
-{
-    // Todo
+    if(place == slots.length)
+        return 1;
+
+    if(col >= boardSize || row >= boardSize || (board[row][col] != ' ' && board[row][col] != word[place]))
+        return 0;
+
+    if(slots.direction == 'H' )
+        return isPlaceSafe(board ,word,boardSize ,slots ,place + 1 ,row ,col + 1) ;
+    else if(slots.direction == 'V')
+        return isPlaceSafe(board ,word,boardSize ,slots ,place + 1 ,row + 1 ,col) ;
+
 }
+
+int task5_crossword_generator(int slotCounter ,int numSlots , int boardSize , char board[MAX_DIMENSION][MAX_DIMENSION]
+    ,struct Slots slots, char dictionary[MAX_SLOTS][MAX_LENGTH] ,int usedWord[MAX_SLOTS]) {
+
+    if(slotCounter == numSlots)
+        return 1;
+    struct Slots slots = slots[slotCounter];
+
+}
+
