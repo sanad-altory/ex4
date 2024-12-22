@@ -22,7 +22,8 @@ int task1_robot_paths(int x, int y);
 float task2_human_pyramid(float arr[5][5], int row , int col);
 int task3_parenthesis_validator(char expected);
 int task4_queens_battle(int size,int row ,int col,int Queens[size][size], char board[size][size],int region[255]);
-void task5_crossword_generator();
+int task5_crossword_generator(int currentSlot ,int numSlots ,int currentWord, int boardSize , char board[MAX_DIMENSION][MAX_DIMENSION]
+    ,struct Slots slots[MAX_SLOTS], char dictionary[MAX_SLOTS][MAX_LENGTH] ,int usedWord[MAX_SLOTS]);
 void initializeRegion(int region[255], int index) {
     if (index < 255) {
         region[index] = 0;
@@ -130,9 +131,9 @@ int main()
             }
             case 5: {
                 int boardSize , wordsCount ,numSlots ;
-                struct Slots slots[MAX_SLOTS];
+                struct Slots slots[MAX_SLOTS] ;
                 char board[MAX_DIMENSION][MAX_DIMENSION] = {{' '}};
-                char dictionary[MAX_SLOTS][MAX_LENGTH + 1];
+                char dictionary[MAX_SLOTS][MAX_LENGTH ];
                 int isWordPlaced[MAX_SLOTS] = {0};
                 printf("Please enter the dimensions of the crossword grid:\n");
                 scanf("%d\n",&boardSize);
@@ -142,9 +143,9 @@ int main()
 
                 printf("Please enter the details for each slot (Row, Column, Length, Direction):\n");
                 for (int i = 0; i < numSlots; i++) {
-                    scanf("%d %d %d %c",&slots[i].row ,&slots[i].col ,&slots[i].length ,&slots[i].direction);
+                    scanf("%d %d %d %c\n",&slots[i].row ,&slots[i].col ,&slots[i].length ,&slots[i].direction);
                 }
-                printf("\nPlease enter the number of words in the dictionary:\n");
+                printf("Please enter the number of words in the dictionary:\n");
                 do {
                     if(scanf("%d",&wordsCount)>= numSlots)
                         break ;
@@ -156,11 +157,17 @@ int main()
                     scanf("%s",dictionary[i]);
                 }
 
-                if(task5_crossword_generator( 0 , numSlots, boardSize ,board, slots, dictionary ,isWordPlaced)) {
-
+                if(task5_crossword_generator(MIN_NUMBER,numSlots ,MIN_NUMBER ,boardSize ,board ,slots ,dictionary ,isWordPlaced )) {
+                    for (int i = 0; i < boardSize; i++) {
+                        for (int j = 0; j < boardSize; j++) {
+                            if (board[i][j] == ' ')
+                                printf("%c",'#');
+                            else
+                                printf("%c",board[i][j]);
+                        }
+                    }
                 }else
                     printf("This crossword cannot be solved.\n");
-
                 break;
             }
             default:
@@ -289,49 +296,67 @@ int task4_queens_battle(int size,int row ,int col,int Queens[size][size], char b
     }
     return task4_queens_battle(size ,row +1 , col , Queens ,board , region);
 }
-int isPlaceSafe(char board[MAX_DIMENSION][MAX_DIMENSION], char word [MAX_LENGTH],int boardSize ,struct Slots slots ,
+int isPlaceSafe(char board[MAX_DIMENSION][MAX_DIMENSION], char word [MAX_LENGTH],int boardSize ,char H_V ,int length,
     int place ,int row , int col) {
-
-    if( (place == slots.length) && (strlen(word) == slots.length) )
+    if(strlen(word) != length) {
+        printf("L");
+        return 0;
+    }
+    if( (place == length)  ) {
+        printf("P");
         return 1;
-
+    }
     if(col >= boardSize || row >= boardSize || (board[row][col] != ' ' && board[row][col] != word[place]))
         return 0;
 
-    if(slots.direction == 'H' )
-        return isPlaceSafe(board ,word,boardSize ,slots ,place + 1 ,row ,col + 1) ;
-    else if(slots.direction == 'V')
-        return isPlaceSafe(board ,word,boardSize ,slots ,place + 1 ,row + 1 ,col) ;
+    if(H_V == 'H' )
+        return isPlaceSafe(board ,word,boardSize ,H_V ,length ,place + 1 ,row ,col + 1) ;
+    else if(H_V == 'V')
+        return isPlaceSafe(board ,word,boardSize ,H_V ,length ,place + 1 ,row + 1 ,col) ;
 
 }
-void placeWord(char board[MAX_DIMENSION][MAX_DIMENSION], char word [MAX_LENGTH] ,struct Slots slots ,
+void placeWord(char board[MAX_DIMENSION][MAX_DIMENSION], char word[MAX_LENGTH] ,char H_V ,int length ,
     int place ,int row , int col) {
 
-    if(place == slots.length)
+    if(place == length)
         return;
-    if(slots.direction == 'H') {
-        board[row][col] = word[place];
-        placeWord(board,word ,slots ,place + 1 ,row ,col + 1);
-    }else if(slots.direction == 'V') {
-        board[row][col] = word[place];
-        placeWord(board ,word ,slots ,place + 1 ,row + 1 ,col );
-    }
+    board[row][col] = word[place];
+    if(H_V == 'H')
+        placeWord(board ,word ,H_V ,length ,place + 1 ,row ,col + 1);
+    else if(H_V == 'V')
+        placeWord(board ,word ,H_V ,length ,place + 1 ,row + 1 ,col );
+}
 
+void removeWord(char board[MAX_DIMENSION][MAX_DIMENSION], char word[MAX_LENGTH], char H_V ,int length,
+    int place,int row ,int col) {
+    if(place == length)
+        return;
+    board[row][col] = ' ';
+    if(H_V == 'H')
+        removeWord(board ,word ,H_V ,length ,place + 1 ,row ,col + 1);
+    else if(H_V == 'V')
+        removeWord(board ,word ,H_V ,length ,place + 1 ,row + 1 ,col );
 }
 
 int task5_crossword_generator(int currentSlot ,int numSlots ,int currentWord, int boardSize , char board[MAX_DIMENSION][MAX_DIMENSION]
-    ,struct Slots slots, char dictionary[MAX_SLOTS][MAX_LENGTH] ,int usedWord[MAX_SLOTS]) {
+    ,struct Slots slots[MAX_SLOTS], char dictionary[MAX_SLOTS][MAX_LENGTH] ,int usedWord[MAX_SLOTS]) {
 
     if(currentSlot == numSlots)
         return 1;
     if(currentWord == numSlots)
         return 0;
-    struct Slots slots = slots[currentSlot];
-    if(isPlaceSafe(board ,dictionary[currentWord],boardSize,slots,MIN_NUMBER,slots.row,slots.col) &&
+    if(isPlaceSafe(board ,dictionary[currentWord] ,boardSize ,slots[currentSlot].direction ,slots[currentSlot].length
+        ,MIN_NUMBER ,slots[currentSlot].row ,slots[currentSlot].col) &&
         (usedWord[currentWord] == 0) ) {
-        placeWord(board,dictionary[currentWord],slots,0 ,slots.row ,slots.col);
+        placeWord(board ,dictionary[currentWord] ,slots[currentSlot].direction
+            ,slots[currentSlot].length ,MIN_NUMBER ,slots[currentSlot].row ,slots[currentSlot].col);
         usedWord[currentWord] = 1;
         if (task5_crossword_generator(currentSlot + 1,numSlots,currentWord + 1,boardSize,board,slots,dictionary,usedWord))
-
+            return 1;
+        removeWord(board ,dictionary[currentWord] ,slots[currentSlot].direction ,slots[currentSlot].length
+            ,MIN_NUMBER ,slots[currentSlot].row ,slots[currentSlot].col);
+        usedWord[currentWord] = 0;
+    }
+    return task5_crossword_generator(currentSlot + 1 ,numSlots ,currentWord ,boardSize,board,slots,dictionary,usedWord);
 }
 
