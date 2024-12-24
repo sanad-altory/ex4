@@ -8,30 +8,29 @@ Assignment:EX4
 #include <string.h>
 #define MIN_NUMBER 0
 #define MAX_SIZE 20
+#define TRUE 1
+#define PYRAMID 5
 #define MAX_DIMENSION 30
 #define MAX_SLOTS 100
 #define MAX_LENGTH 15
-struct Slots {
-    int row ;
-    int col ;
-    int length;
+typedef struct {
+    int row , col , length;
     char direction;
-};
+}Slots;
 
 int task1_robot_paths(int x, int y);
-float task2_human_pyramid(float arr[5][5], int row , int col);
+float task2_human_pyramid(float arr[PYRAMID][PYRAMID], int row , int col);
 int task3_parenthesis_validator(char expected);
 int task4_queens_battle(int size,int row ,int col,int Queens[size][size], char board[size][size],int region[255]);
-int task5_crossword_generator(int currentSlot ,int numSlots ,int currentWord, int boardSize , char board[MAX_DIMENSION][MAX_DIMENSION]
-    ,struct Slots slots[MAX_SLOTS], char dictionary[MAX_SLOTS][MAX_LENGTH] ,int usedWord[MAX_SLOTS]);
+int solve_crossword(char grid[MAX_SIZE][MAX_SIZE], Slots slots[], int slot_index, int num_slots, char words[MAX_SLOTS][MAX_LENGTH], int word_index[], int num_words);
+void print_grid(char grid[MAX_SIZE][MAX_SIZE], int size, int row, int col);
 void initializeRegion(int region[255], int index) {
     if (index < 255) {
         region[index] = 0;
         initializeRegion(region, index + 1);
     }
 }
-
-
+void clearBuffer();
 
 int main()
 {
@@ -48,41 +47,48 @@ int main()
 
         if (scanf("%d", &task))
         {
-            scanf("%*c");
+             //clearBuffer();
             switch (task)
             {
             case 6:
                 printf("Goodbye!\n");
                 break;
+                //Robot Paths
             case 1: {
                 int column , row ;
                 printf("Please enter the coordinates of the robot (column, row):\n");
                 scanf("%d %d", &column, &row);
+                //check if the user enter a negative number return 0 else continue checking.
                 if (column < MIN_NUMBER || MIN_NUMBER > row)
                     printf(" %d" , MIN_NUMBER);
                 else {
+                    //calling the recursion function to return the number of routes.
                     printf("The total number of paths the robot can take to reach home is: %d\n" ,task1_robot_paths(column, row) );
                 }
                 break;
             }
             case 2: {
                 printf("Please enter the weights of the cheerleaders:\n");
-                int column = 5 ,row = 5,negative_weight = 0;
-                float list[row][column];
-                for (int i = 0; i < row; i++) {
+                // an integer to check if the user enter a negative number.
+                int negative_weight = 0;
+                float list[PYRAMID][PYRAMID];
+                //A loop that Ask the user to enter weights of the cheerleading team.
+                for (int i = 0; i < PYRAMID; i++) {
                     for (int j = 0; j <= i; j++) {
                         scanf("%f", &list[i][j]);
+                        //check if the user entered a negative number.
                         if (list[i][j] < MIN_NUMBER) {
                             printf("Negative weights are not supported.\n");
                             negative_weight = 1;
                         }
-                    }
+                    }//get out of the loop and back to the main menu.
                     if(negative_weight)
                         break;
                 }
                 if(!negative_weight) {
-                    for (int i = 0; i < row; i++) {
+                    for (int i = 0; i < PYRAMID; i++) {
                         for (int j = 0; j <= i; j++) {
+                            //print the new weights after calling the recursion function.
                             printf("%.2f ", task2_human_pyramid(list,i, j));
                         }
                         printf("\n");
@@ -90,14 +96,18 @@ int main()
                 }
                 break;
             }
-            case 3:
+            case 3: {
                 printf("Please enter a term for validation:\n");
+                clearBuffer();
                 if (task3_parenthesis_validator('\0')) {
                     printf("The parentheses are balanced correctly.\n");
                 } else {
                     printf("The parentheses are not balanced correctly.\n");
                 }
+                clearBuffer();
+
                 break;
+            }
             case 4: {
                 printf("Please enter the board dimensions :\n");
                 int size;
@@ -111,17 +121,17 @@ int main()
                         scanf(" %c", &board[i][j]);
                         Queenss[i][j] = 0;
                     }
-                    printf("\n");
                 }
                 int region_used[255];
                 initializeRegion(region_used,0);
                 if(task4_queens_battle(size , MIN_NUMBER,MIN_NUMBER,Queenss, board , region_used)) {
+                    printf("Soloution\n");
                     for (int i = 0; i < size; i++) {
                         for (int j = 0; j < size; j++) {
                             if (Queenss[i][j] == 1) {
-                                printf(" X");
+                                printf("X ");
                             }else
-                                printf(" *");
+                                printf("* ");
                         }
                         printf("\n");
                     }
@@ -130,44 +140,53 @@ int main()
                 break;
             }
             case 5: {
-                int boardSize , wordsCount ,numSlots ;
-                struct Slots slots[MAX_SLOTS] ;
-                char board[MAX_DIMENSION][MAX_DIMENSION] = {{' '}};
-                char dictionary[MAX_SLOTS][MAX_LENGTH ];
-                int isWordPlaced[MAX_SLOTS] = {0};
+                int size, num_slots, num_words;
+
+                // Input the dimensions of the crossword grid
                 printf("Please enter the dimensions of the crossword grid:\n");
-                scanf("%d\n",&boardSize);
+                scanf("%d", &size);
 
+                // Input the number of slots
                 printf("Please enter the number of slots in the crossword:\n");
-                scanf("%d\n",&numSlots);
+                scanf("%d", &num_slots);
 
+                Slots slots[num_slots];
                 printf("Please enter the details for each slot (Row, Column, Length, Direction):\n");
-                for (int i = 0; i < numSlots; i++) {
-                    scanf("%d %d %d %c\n",&slots[i].row ,&slots[i].col ,&slots[i].length ,&slots[i].direction);
-                }
-                printf("Please enter the number of words in the dictionary:\n");
-                do {
-                    if(scanf("%d",&wordsCount)>= numSlots)
-                        break ;
-                    printf("The dictionary must contain at least %d words."
-                        "Please enter a valid dictionary size:\n",numSlots);
-                }while(scanf("%d",&wordsCount)>= numSlots);
-                printf("Please enter the words for the dictionary:\n");
-                for (int i = 0; i < wordsCount; i++) {
-                    scanf("%s",dictionary[i]);
+                for (int i = 0; i < num_slots; i++) {
+                    scanf("%d %d %d %c", &slots[i].row, &slots[i].col, &slots[i].length, &slots[i].direction);
                 }
 
-                if(task5_crossword_generator(MIN_NUMBER,numSlots ,MIN_NUMBER ,boardSize ,board ,slots ,dictionary ,isWordPlaced )) {
-                    for (int i = 0; i < boardSize; i++) {
-                        for (int j = 0; j < boardSize; j++) {
-                            if (board[i][j] == ' ')
-                                printf("%c",'#');
-                            else
-                                printf("%c",board[i][j]);
-                        }
+                // Input the number of words in the dictionary
+                printf("Please enter the number of words in the dictionary:\n");
+                scanf("%d", &num_words);
+                while (num_words < num_slots) {
+                    printf("The dictionary must contain at least %d words. Please enter a valid dictionary size:\n", num_slots);
+                    scanf("%d", &num_words);
+                }
+
+                char words[MAX_SLOTS][MAX_LENGTH];
+                printf("Please enter the words for the dictionary:\n");
+                for (int i = 0; i < num_words; i++) {
+                    scanf("%s", words[i]);
+                }
+
+                // Initialize the grid with '#' (empty cells)
+                char grid[MAX_SIZE][MAX_SIZE];
+                for (int i = 0; i < size; i++) {
+                    for (int j = 0; j < size; j++) {
+                        grid[i][j] = '#';
                     }
-                }else
+                }
+
+                // Array to keep track of which words have been used
+                int word_index[MAX_SLOTS] = {0};
+
+                // Try to solve the crossword puzzle
+                if (solve_crossword(grid, slots, 0, num_slots, words, word_index, num_words)) {
+                    print_grid(grid, size, 0, 0);
+                } else {
                     printf("This crossword cannot be solved.\n");
+                }
                 break;
             }
             default:
@@ -177,49 +196,61 @@ int main()
         }
         else
         {
+            //clearBuffer();
             scanf("%*s");
+
         }
 
     } while (task != 6);
 }
-
+//A Recursion function to check all the possible routes that the robot need to make.
 int task1_robot_paths(int x, int y)
 {
+    //n,m for saving num of the routes.
     int n = 0, m = 0 ;
+    //The base case is when the robot get to his destination (0,0).
     if (x == MIN_NUMBER && y == MIN_NUMBER)
         return 1;
+    //check all the possible routes until you get to (0,y).
     if (x > MIN_NUMBER)
        n =task1_robot_paths(x - 1, y);
+    //check all the possible routes until you get to (x,0).
     if (y > MIN_NUMBER)
        m =task1_robot_paths(x, y - 1);
+    // return the all possible routes to get to (0,0).
     return n + m ;
 }
-
-float task2_human_pyramid(float arr[5][5], int row , int col)
+//A function that get weights by their position in the array and make the changes on them
+float task2_human_pyramid(float arr[PYRAMID][PYRAMID], int row , int col)
 {
+    // if the weight on top of the pyramid don't make changes.
     if( col == MIN_NUMBER && row == MIN_NUMBER)
         return arr[row][col];
+    /* the first if is for the weights that are in the middle
+     * the second if is for the weights that are in leftist side */
     if (row >= col && col > MIN_NUMBER)
-        return arr[row][col] + task2_human_pyramid(arr, row -1, col - 1)/2 + task2_human_pyramid(arr, row -1, col)/2;
+        return  task2_human_pyramid(arr, row -1, col - 1)/2 + task2_human_pyramid(arr, row -1, col)/2 + arr[row][col];
     if(col == MIN_NUMBER && row > col)
-        return arr[row][col] + task2_human_pyramid(arr, row -1, col)/2 ;
+        return  task2_human_pyramid(arr, row -1, col)/2 + arr[row][col] ;
+    //to check that is not out of the boundreis.
     if (col > row)
        return 0;
+}
+void clearBuffer() {
+    // Consume any characters remaining in the input buffer until a newline
+    scanf("%*[^\n]"); // This consumes all characters except '\n'
+    scanf("%*c");      // This consumes the newline itself
 }
 
 int task3_parenthesis_validator(char expected)
 {
     char c;
 
-    // Read the next character (this will avoid issues caused by leftover newline characters)
-    if (scanf("%c", &c) != 1)
-        return 0;  // If input fails, return 0 (false)
-
+    scanf("%c", &c );
     // Base case: If newline is encountered, return 1 if expected is '\0'
     if (c == '\n') {
         return expected == '\0';  // Ensure all parentheses are matched
     }
-
     // Check for opening parentheses and recursively validate
     if (c == '(') {
         if (!task3_parenthesis_validator(')')) return 0;
@@ -233,7 +264,6 @@ int task3_parenthesis_validator(char expected)
         // If an unexpected closing parenthesis is found
         return c == expected;
     }
-
     // Continue reading the next character
     return task3_parenthesis_validator(expected);
 }
@@ -296,67 +326,88 @@ int task4_queens_battle(int size,int row ,int col,int Queens[size][size], char b
     }
     return task4_queens_battle(size ,row +1 , col , Queens ,board , region);
 }
-int isPlaceSafe(char board[MAX_DIMENSION][MAX_DIMENSION], char word [MAX_LENGTH],int boardSize ,char H_V ,int length,
-    int place ,int row , int col) {
-    if(strlen(word) != length) {
-        printf("L");
+void print_grid(char grid[MAX_SIZE][MAX_SIZE], int size, int row, int col) {
+    if (row == size) {
+        return;
+    }
+    if (col == size) {
+        printf("\n");
+        print_grid(grid, size, row + 1, 0);
+        return;
+    }
+    printf("| ");
+    printf("%c ", grid[row][col]);
+    print_grid(grid, size, row, col + 1);
+}
+
+int can_place_word(char grid[MAX_SIZE][MAX_SIZE], char word[], int row, int col, int length, char direction, int idx) {
+    if (direction == 'H') {
+        if (col + length > MAX_SIZE) return 0;
+        if (idx == length) return 1;
+        if (grid[row][col + idx] == '#' || grid[row][col + idx] == word[idx]) {
+            return can_place_word(grid, word, row, col, length, direction, idx + 1);
+        }
+        return 0;
+    } else if (direction == 'V') {
+        if (row + length > MAX_SIZE) return 0;
+        if (idx == length) return 1;
+        if (grid[row + idx][col] == '#' || grid[row + idx][col] == word[idx]) {
+            return can_place_word(grid, word, row, col, length, direction, idx + 1);
+        }
         return 0;
     }
-    if( (place == length)  ) {
-        printf("P");
-        return 1;
+    return 0;
+}
+void place_word(char grid[MAX_SIZE][MAX_SIZE], char word[], int row, int col, int length, char direction, int idx) {
+    if (idx == length) return;
+
+    if (direction == 'H') {
+        grid[row][col + idx] = word[idx];
+        place_word(grid, word, row, col, length, direction, idx + 1);
+    } else if (direction == 'V') {
+        grid[row + idx][col] = word[idx];
+        place_word(grid, word, row, col, length, direction, idx + 1);
     }
-    if(col >= boardSize || row >= boardSize || (board[row][col] != ' ' && board[row][col] != word[place]))
-        return 0;
-
-    if(H_V == 'H' )
-        return isPlaceSafe(board ,word,boardSize ,H_V ,length ,place + 1 ,row ,col + 1) ;
-    else if(H_V == 'V')
-        return isPlaceSafe(board ,word,boardSize ,H_V ,length ,place + 1 ,row + 1 ,col) ;
-
-}
-void placeWord(char board[MAX_DIMENSION][MAX_DIMENSION], char word[MAX_LENGTH] ,char H_V ,int length ,
-    int place ,int row , int col) {
-
-    if(place == length)
-        return;
-    board[row][col] = word[place];
-    if(H_V == 'H')
-        placeWord(board ,word ,H_V ,length ,place + 1 ,row ,col + 1);
-    else if(H_V == 'V')
-        placeWord(board ,word ,H_V ,length ,place + 1 ,row + 1 ,col );
 }
 
-void removeWord(char board[MAX_DIMENSION][MAX_DIMENSION], char word[MAX_LENGTH], char H_V ,int length,
-    int place,int row ,int col) {
-    if(place == length)
-        return;
-    board[row][col] = ' ';
-    if(H_V == 'H')
-        removeWord(board ,word ,H_V ,length ,place + 1 ,row ,col + 1);
-    else if(H_V == 'V')
-        removeWord(board ,word ,H_V ,length ,place + 1 ,row + 1 ,col );
+void remove_word(char grid[MAX_SIZE][MAX_SIZE], int row, int col, int length, char direction, int idx) {
+    if (idx == length) return;
+
+    if (direction == 'H') {
+        grid[row][col + idx] = '#';
+        remove_word(grid, row, col, length, direction, idx + 1);
+    } else if (direction == 'V') {
+        grid[row + idx][col] = '#';
+        remove_word(grid, row, col, length, direction, idx + 1);
+    }
 }
+int solve_crossword_for_slot(char grid[MAX_SIZE][MAX_SIZE], Slots slots[], int slot_index, int num_slots, char words[MAX_SLOTS][MAX_LENGTH],
+    int word_index[], int num_words, int row, int col, int length, char direction, int word_idx) {
+    if (word_idx == num_words) {
+        return 0; // No more words to try
+    }
+    if (word_index[word_idx] == 0 && strlen(words[word_idx]) == length && can_place_word(grid, words[word_idx], row, col, length, direction, 0)) {
+        place_word(grid, words[word_idx], row, col, length, direction, 0);
+        word_index[word_idx] = 1; // Mark the word as used
 
-int task5_crossword_generator(int currentSlot ,int numSlots ,int currentWord, int boardSize , char board[MAX_DIMENSION][MAX_DIMENSION]
-    ,struct Slots slots[MAX_SLOTS], char dictionary[MAX_SLOTS][MAX_LENGTH] ,int usedWord[MAX_SLOTS]) {
-
-    if(currentSlot == numSlots)
-        return 1;
-    if(currentWord == numSlots)
-        return 0;
-    if(isPlaceSafe(board ,dictionary[currentWord] ,boardSize ,slots[currentSlot].direction ,slots[currentSlot].length
-        ,MIN_NUMBER ,slots[currentSlot].row ,slots[currentSlot].col) &&
-        (usedWord[currentWord] == 0) ) {
-        placeWord(board ,dictionary[currentWord] ,slots[currentSlot].direction
-            ,slots[currentSlot].length ,MIN_NUMBER ,slots[currentSlot].row ,slots[currentSlot].col);
-        usedWord[currentWord] = 1;
-        if (task5_crossword_generator(currentSlot + 1,numSlots,currentWord + 1,boardSize,board,slots,dictionary,usedWord))
+        if (solve_crossword(grid, slots, slot_index + 1, num_slots, words, word_index, num_words)) {
             return 1;
-        removeWord(board ,dictionary[currentWord] ,slots[currentSlot].direction ,slots[currentSlot].length
-            ,MIN_NUMBER ,slots[currentSlot].row ,slots[currentSlot].col);
-        usedWord[currentWord] = 0;
+        }
+        remove_word(grid, row, col, length, direction, 0); // Backtrack
+        word_index[word_idx] = 0; // Unmark the word as used
     }
-    return task5_crossword_generator(currentSlot + 1 ,numSlots ,currentWord ,boardSize,board,slots,dictionary,usedWord);
+    return solve_crossword_for_slot(grid, slots, slot_index, num_slots, words, word_index, num_words, row, col, length, direction, word_idx + 1);
 }
+
+int solve_crossword(char grid[MAX_SIZE][MAX_SIZE], Slots slots[], int slot_index, int num_slots, char words[MAX_SLOTS][MAX_LENGTH], int word_index[], int num_words) {
+    if (slot_index == num_slots) {
+        return 1; // All slots are filled
+    }
+    int row = slots[slot_index].row,length = slots[slot_index].length,col = slots[slot_index].col;
+    char direction = slots[slot_index].direction;
+    // Try each word in the dictionary
+    return solve_crossword_for_slot(grid, slots, slot_index, num_slots, words, word_index, num_words, row, col, length, direction, 0);
+}
+
+
 
