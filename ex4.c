@@ -47,7 +47,6 @@ int main()
 
         if (scanf("%d", &task))
         {
-             //clearBuffer();
             switch (task)
             {
             case 6:
@@ -97,15 +96,14 @@ int main()
                 break;
             }
             case 3: {
-                printf("Please enter a term for validation:\n");
                 clearBuffer();
+                printf("Please enter a term for validation:\n");
+
                 if (task3_parenthesis_validator('\0')) {
                     printf("The parentheses are balanced correctly.\n");
                 } else {
                     printf("The parentheses are not balanced correctly.\n");
                 }
-                clearBuffer();
-
                 break;
             }
             case 4: {
@@ -223,6 +221,8 @@ int task1_robot_paths(int x, int y)
 //A function that get weights by their position in the array and make the changes on them
 float task2_human_pyramid(float arr[PYRAMID][PYRAMID], int row , int col)
 {
+    if (col > row)
+        return 0;
     // if the weight on top of the pyramid don't make changes.
     if( col == MIN_NUMBER && row == MIN_NUMBER)
         return arr[row][col];
@@ -233,25 +233,20 @@ float task2_human_pyramid(float arr[PYRAMID][PYRAMID], int row , int col)
     if(col == MIN_NUMBER && row > col)
         return  task2_human_pyramid(arr, row -1, col)/2 + arr[row][col] ;
     //to check that is not out of the boundreis.
-    if (col > row)
-       return 0;
+    return 0;
 }
 void clearBuffer() {
     // Consume any characters remaining in the input buffer until a newline
-    scanf("%*[^\n]"); // This consumes all characters except '\n'
+    scanf("%*[^ \n]"); // This consumes all characters except '\n'
     scanf("%*c");      // This consumes the newline itself
 }
 
-int task3_parenthesis_validator(char expected)
-{
+int task3_parenthesis_validator(char expected) {
     char c;
-
-    scanf("%c", &c );
-    // Base case: If newline is encountered, return 1 if expected is '\0'
+    scanf("%c", &c);
     if (c == '\n') {
-        return expected == '\0';  // Ensure all parentheses are matched
+        return expected == '\0';
     }
-    // Check for opening parentheses and recursively validate
     if (c == '(') {
         if (!task3_parenthesis_validator(')')) return 0;
     } else if (c == '[') {
@@ -261,10 +256,8 @@ int task3_parenthesis_validator(char expected)
     } else if (c == '<') {
         if (!task3_parenthesis_validator('>')) return 0;
     } else if (c == ')' || c == ']' || c == '}' || c == '>') {
-        // If an unexpected closing parenthesis is found
         return c == expected;
     }
-    // Continue reading the next character
     return task3_parenthesis_validator(expected);
 }
 
@@ -315,14 +308,14 @@ int task4_queens_battle(int size,int row ,int col,int Queens[size][size], char b
     if(isSafeSquare(size , row , col , Queens,board,region ,1) &&
         isRowSafe(size,row, 0,Queens) &&
         isColSafe(size, 0,col,Queens) &&
-        region[(unsigned char)board[row][col]] == 0 ) {
+        region[(int)board[row][col]] == 0 ) {
         Queens[row][col] = 1;
-        region[(unsigned char)board[row][col]] = 1;
+        region[(int)board[row][col]] = 1;
         if (task4_queens_battle(size, 0,col + 1,Queens,board,region)) {
             return 1 ;
         }
         Queens[row][col] = 0;
-        region[(unsigned char)board[row][col]] = 0;
+        region[(int)board[row][col]] = 0;
     }
     return task4_queens_battle(size ,row +1 , col , Queens ,board , region);
 }
@@ -386,7 +379,7 @@ int solve_crossword_for_slot(char grid[MAX_SIZE][MAX_SIZE], Slots slots[], int s
     if (word_idx == num_words) {
         return 0; // No more words to try
     }
-    if (word_index[word_idx] == 0 && strlen(words[word_idx]) == length && can_place_word(grid, words[word_idx], row, col, length, direction, 0)) {
+    if (word_index[word_idx] == 0 && (int)strlen( words[word_idx]) == length && can_place_word(grid, words[word_idx], row, col, length, direction, 0)) {
         place_word(grid, words[word_idx], row, col, length, direction, 0);
         word_index[word_idx] = 1; // Mark the word as used
 
